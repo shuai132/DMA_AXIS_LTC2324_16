@@ -64,8 +64,6 @@ begin
     begin
         state <= S_IDLE;
 
-        CNV <= 1'b0;
-
         tcnvh_clk_cnt  <= 1'b0;
         tconv_clk_cnt  <= 1'b0;
         tsck_clk_cnt   <= 1'b0;
@@ -76,10 +74,7 @@ begin
         S_IDLE:
         begin
             if (sample_en)
-            begin
                 state <= S_TCNVH;
-                CNV <= 1'b1;
-            end
             else
                 state <= S_IDLE;
         end
@@ -88,7 +83,6 @@ begin
             if (tcnvh_clk_cnt == tcnvh_clk_all)
             begin
                 tcnvh_clk_cnt <= 2'd0;
-                CNV <= 1'b0;
                 state <= S_TCONV;
             end
             else
@@ -122,7 +116,6 @@ begin
                 if (sample_en)
                 begin
                     state <= S_TCNVH;
-                    CNV <= 1'b1;
                 end
                 else
                     state <= S_IDLE;
@@ -133,6 +126,14 @@ begin
         default:
             state <= S_IDLE;
     endcase
+end
+
+always@(*)
+begin
+    if (state == S_TCNVH && sample_en)
+        CNV = 1'b1;
+    else
+        CNV = 1'b0;
 end
 
 assign SCK = state == S_TSCK ? clk : 1'b0;
@@ -158,15 +159,12 @@ begin
     end
 end
 
-always@(negedge DATA_SHIFT_CLK or posedge CNV or negedge sample_en or rst_n)
+always@(*)
 begin
-    if (rst_n == 1'b0)
-        valid <= 1'b0;
-    else if (DATA_SHIFT_CLK == 1'b0)
-        if (tsck_clk_cnt == tsck_clk_all)
-            valid <= 1'b1;
-    else if (CNV == 1'b1 || sample_en == 1'b0)
-        valid <= 1'b0;
+    if (state == S_DELAY && sample_en)
+        valid = 1'b1;
+    else
+        valid = 1'b0;
 end
 
 endmodule
