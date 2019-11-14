@@ -56,6 +56,8 @@ wire[15:0]          adc_ch4;
 wire[63:0]          adc_data;
 assign              adc_data = {adc_ch1, adc_ch2, adc_ch3, adc_ch4};
 
+reg                 adc_valid_flag;
+
 always@(posedge adc_clk or negedge adc_rst_n)
 begin
     if(adc_rst_n == 1'b0)
@@ -88,20 +90,30 @@ begin
                 st_clr     <= 1'b0;
                 fifo_din   <= 1'b0;
                 write_cnt  <= 1'b0;
+                adc_valid_flag <= 1'b0;
             end
             else
             begin
-                // arm是小端模式 这里也把高位字节放到前面 方便解析
-                fifo_din   <= adc_data >> (write_cnt * 4'd8);
-                fifo_wr_en <= 1'b1;
+                if (adc_valid)
+                    adc_valid_flag <= 1'b1;
 
-                if (write_cnt == write_num)
-                begin
-                    write_cnt  <= 1'b0;
-                    sample_cnt <= sample_cnt + 32'd1;
+                // adc_valid高电平时进行读取adc数据
+                // 已知持续时间大于8个时钟 可分八次传送
+                // adc_valid_flag是为了把valid信号延长至少读取完8个字节
+                if (adc_valid || adc_valid_flag) begin
+                    // arm是小端模式 这里也把高位字节放到前面 方便解析
+                    fifo_din   <= adc_data >> (write_cnt * 4'd8);
+                    fifo_wr_en <= 1'b1;
+
+                    if (write_cnt == write_num)
+                    begin
+                        write_cnt  <= 1'b0;
+                        sample_cnt <= sample_cnt + 32'd1;
+                        adc_valid_flag <= 1'b0;
+                    end
+                    else
+                        write_cnt  <= write_cnt + 1'b1;
                 end
-                else
-                    write_cnt  <= write_cnt + 1'b1;
             end
         end
         default:
