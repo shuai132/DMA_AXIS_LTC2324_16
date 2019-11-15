@@ -26,6 +26,8 @@ module AXI_DMA_LTC2324_16(
     input               DMA_CLK
 );
 
+parameter           TEST_MODE   = 1'b0;
+
 reg[31:0]           sample_cnt;
 reg[31:0]           wait_cnt;
 reg                 fifo_wr_en;
@@ -101,7 +103,7 @@ begin
                 // adc_valid高电平时进行读取adc数据
                 // 已知持续时间大于8个时钟 可分八次传送
                 // adc_valid_flag是为了把valid信号延长至少读取完8个字节
-                if (adc_valid || adc_valid_flag) begin
+                if (adc_valid_flag) begin
                     fifo_wr_en <= 1'b1;
 
                     // arm是小端模式 这里也把高位字节放到前面 方便解析
@@ -124,7 +126,9 @@ begin
     endcase
 end
 
-LTC2324_16 LTC2324_16_inst
+LTC2324_16
+#(.USE_SCK_SHIFT_DATA(TEST_MODE))
+LTC2324_16_inst
 (
     .clk        (adc_clk),
     .rst_n      (adc_rst_n),

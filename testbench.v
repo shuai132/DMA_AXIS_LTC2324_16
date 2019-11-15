@@ -2,10 +2,15 @@
 module testbench();
 
 parameter clk_period = 10;
-reg clk;
+reg adc_clk;
 initial
-    clk = 0;
-always #(clk_period/2) clk = ~clk;
+    adc_clk = 0;
+always #(clk_period/2) adc_clk = ~adc_clk;
+
+reg dma_clk;
+initial
+    dma_clk = 0;
+always #(clk_period/10) dma_clk = ~dma_clk;
 
 reg rst_n;
 initial
@@ -15,57 +20,53 @@ begin
     rst_n = 1'b1;
 end
 
-// LTC2324_16
-wire            valid;
-wire[15:0]      ch1;
-wire[15:0]      ch2;
-wire[15:0]      ch3;
-wire[15:0]      ch4;
-
-wire            CNV;
-wire            SCK;
-wire            CLKOUT;
-wire            SDO1;
-wire            SDO2;
-wire            SDO3;
-reg             SDO4;
+wire            adc_CNV;
+wire            adc_SCK;
+wire            adc_CLKOUT;
+wire            adc_SDO1;
+wire            adc_SDO2;
+wire            adc_SDO3;
+reg             adc_SDO4;
 
 // 模拟采样控制信号
-parameter sample_en_period = clk_period * 55 * 4;
+parameter sample_en_period = clk_period * 55 * 10;
 reg sample_en;
 initial
+begin
     sample_en = 0;
+    #100
+    sample_en = 1;
+end
 always #(sample_en_period/2) sample_en = ~sample_en;
 
 // 模拟数据信号
-assign SDO1 = 1'b0;
-assign SDO2 = 1'b1;
-assign SDO3 = 1'bz;
+assign adc_SDO1 = 1'b0;
+assign adc_SDO2 = 1'b1;
+assign adc_SDO3 = 1'bz;
 initial
-    SDO4 = 0;
-always #(clk_period/5) SDO4 = ~SDO4;
+    adc_SDO4 = 0;
+always #(clk_period/5) adc_SDO4 = ~adc_SDO4;
 
-LTC2324_16 #(.USE_SCK_SHIFT_DATA(1'b1))
-ltc2324
+AXI_DMA_LTC2324_16 #(.TEST_MODE(1'b1))
+AXI_DMA_LTC2324_16_inst
 (
-    .clk        (clk),
-    .rst_n      (rst_n),
+    .adc_clk        (adc_clk),
+    .adc_rst_n      (rst_n),
 
-    .CNV        (CNV),
-    .SCK        (SCK),
-    .CLKOUT     (CLKOUT),
-    .SDO1       (SDO1),
-    .SDO2       (SDO2),
-    .SDO3       (SDO3),
-    .SDO4       (SDO4),
+    .adc_CNV        (adc_CNV),
+    .adc_SCK        (adc_SCK),
+    .adc_CLKOUT     (adc_CLKOUT),
+    .adc_SDO1       (adc_SDO1),
+    .adc_SDO2       (adc_SDO2),
+    .adc_SDO3       (adc_SDO3),
+    .adc_SDO4       (adc_SDO4),
 
-    .sample_en  (sample_en),
+    .sample_len     (32'd128),
+    .sample_start   (sample_en),
 
-    .valid      (valid),
-    .ch1        (ch1),
-    .ch2        (ch2),
-    .ch3        (ch3),
-    .ch4        (ch4)
+    .DMA_CLK        (dma_clk),
+    .DMA_AXIS_tready(1'b1),
+    .DMA_RST_N      (rst_n)
 );
 
 integer k = 0;
