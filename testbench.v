@@ -30,14 +30,21 @@ reg             adc_SDO4;
 
 // 模拟采样控制信号
 parameter sample_en_period = clk_period * 55 * 10;
-reg sample_en;
+reg sample_start;
+
 initial
 begin
-    sample_en = 0;
+    sample_start = 0;
     #100
-    sample_en = 1;
+    sample_start = 1;
 end
-always #(sample_en_period/2) sample_en = ~sample_en;
+
+wire st_clr;
+always@(posedge adc_clk)
+begin
+    if (st_clr)
+        sample_start <= 1'b0;
+end
 
 // 模拟数据信号
 assign adc_SDO1 = 1'b0;
@@ -61,9 +68,9 @@ AXI_DMA_LTC2324_16_inst
     .adc_SDO3       (adc_SDO3),
     .adc_SDO4       (adc_SDO4),
 
-    .sample_len     (32'd128),
-    .sample_start   (sample_en),
-
+    .sample_len     (32'd3),
+    .sample_start   (sample_start),
+    .st_clr         (st_clr),
     .DMA_CLK        (dma_clk),
     .DMA_AXIS_tready(1'b1),
     .DMA_RST_N      (rst_n)
