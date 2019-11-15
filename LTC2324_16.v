@@ -27,7 +27,7 @@ module LTC2324_16(
     input           sample_en,      // 开启采样
 
     // 完成一次采集和读取
-    output reg          valid,      // 1:可读 0:无效
+    output reg          valid,      // 上升沿时可读 将维持一个clk
     output reg[15:0]    ch1,
     output reg[15:0]    ch2,
     output reg[15:0]    ch3,
@@ -68,6 +68,8 @@ begin
         tconv_clk_cnt  <= 1'b0;
         tsck_clk_cnt   <= 1'b0;
         tdelay_clk_cnt <= 1'b0;
+
+        valid <= 1'b0;
     end
     else
     case(state)
@@ -104,12 +106,14 @@ begin
             begin
                 tsck_clk_cnt <= 4'd0;
                 state <= S_DELAY;
+                valid <= 1'b1;
             end
             else
                 tsck_clk_cnt <= tsck_clk_cnt + 1'b1;
         end
         S_DELAY:
         begin
+            valid <= 1'b0;
             if (tdelay_clk_cnt == tdelay_clk_all)
             begin
                 tdelay_clk_cnt <= 4'd0;
@@ -157,14 +161,6 @@ begin
         ch3 <= (ch3 << 1'b1) + 1;
         ch4 <= 16'h5678;
     end
-end
-
-always@(*)
-begin
-    if (state == S_DELAY && sample_en)
-        valid = 1'b1;
-    else
-        valid = 1'b0;
 end
 
 endmodule

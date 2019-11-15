@@ -100,10 +100,8 @@ begin
                 if (adc_valid)
                     adc_valid_flag <= 1'b1;
 
-                // adc_valid高电平时进行读取adc数据
-                // 已知持续时间大于8个时钟 可分八次传送
-                // adc_valid_flag是为了把valid信号延长至少读取完8个字节
-                if (adc_valid_flag) begin
+                // adc_valid_flag用于把valid信号延长至读取完8个字节
+                if (adc_valid || adc_valid_flag) begin
                     fifo_wr_en <= 1'b1;
 
                     // arm是小端模式 这里也把高位字节放到前面 方便解析
