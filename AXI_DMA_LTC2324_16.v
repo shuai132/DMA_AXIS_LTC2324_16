@@ -29,11 +29,7 @@ parameter       TEST_MODE   = 1'b0;
 
 reg[2:0]        state;
 localparam      S_IDLE      = 3'd0;
-localparam      S_WAIT      = 3'd1;
 localparam      S_SAMP      = 3'd2;
-
-reg[4:0]        wait_cnt;
-localparam      wait_num    = 5'd20;
 reg[31:0]       sample_cnt;
 
 reg             fifo_wr_en;
@@ -110,7 +106,6 @@ begin
     if(adc_rst_n == 1'b0)
     begin
         state       <= S_IDLE;
-        wait_cnt    <= 1'b0;
         sample_cnt  <= 1'b0;
     end
     else
@@ -119,25 +114,13 @@ begin
             begin
               if (sample_start_d2)
               begin
-                state  <= S_WAIT;
+                state  <= S_SAMP;
                 st_clr <= 1'b1;
               end
             end
-            S_WAIT:
-            begin
-              if(wait_cnt == wait_num)
-              begin
-                state    <= S_SAMP;
-                wait_cnt <= 1'b0;
-              end
-              else
-              begin
-                  wait_cnt <= wait_cnt + 1'b1;
-              end
-              st_clr <= 1'b0;
-            end
             S_SAMP:
             begin
+              st_clr <= 1'b0;
               if (adc_data_valid)
               begin
                 if(sample_cnt == sample_len_d2 - 1)
