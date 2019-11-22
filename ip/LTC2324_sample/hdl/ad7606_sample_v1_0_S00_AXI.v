@@ -27,6 +27,10 @@
         input                       adc_SDO3,
         input                       adc_SDO4,
         
+        input                       adc_ismaster,
+        input                       adc_start_in,
+        output                      adc_start_out,
+        
 		output [15:0]               m00_axis_tdata,
         output [1:0]                m00_axis_tkeep,
         output                      m00_axis_tlast,
@@ -456,7 +460,7 @@ ad7606_sample sample_inst(
     .adc_SDO4             (adc_SDO4         ), 
     
 	.sample_len           (slv_reg1 ),
-	.sample_start         (slv_reg0[0]),
+	.sample_start         (adc_ismaster ? slv_reg0[0] : adc_start_in),
 	.st_clr               (st_clr  ),
 	.ch_sel               (slv_reg2[7:0]  ),
     .DMA_AXIS_tdata       (m00_axis_tdata ),
@@ -465,11 +469,11 @@ ad7606_sample sample_inst(
     .DMA_AXIS_tready      (m00_axis_tready),
     .DMA_AXIS_tvalid      (m00_axis_tvalid),
     .DMA_CLK              (m00_axis_aclk        ),
-    .DMA_RST_N            (m00_axis_aresetn      )
+    .DMA_RST_N            (m00_axis_aresetn     )
 
 );
-	
-	
+
+	assign adc_start_out = slv_reg0[0];
 	
 	// User logic ends
 

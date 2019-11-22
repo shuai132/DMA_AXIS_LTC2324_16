@@ -26,6 +26,10 @@
         input                       adc_SDO2,
         input                       adc_SDO3,
         input                       adc_SDO4,
+        
+        input                       adc_ismaster,
+        input                       adc_start_in,
+        output                      adc_start_out,
 
 		output [15:0]               m00_axis_tdata,
         output [1:0]                m00_axis_tkeep,
@@ -76,6 +80,9 @@
         .adc_SDO2             (adc_SDO2         ), 
         .adc_SDO3             (adc_SDO3         ), 
         .adc_SDO4             (adc_SDO4         ), 
+        .adc_ismaster         (adc_ismaster     ), 
+        .adc_start_in         (adc_start_in     ), 
+        .adc_start_out        (adc_start_out    ), 
 
 		.m00_axis_tdata   (m00_axis_tdata  ),
         .m00_axis_tkeep   (m00_axis_tkeep  ),
