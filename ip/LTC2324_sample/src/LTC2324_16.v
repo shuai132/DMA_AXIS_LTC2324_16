@@ -154,7 +154,7 @@ begin
         ch3 <= 1'b0;
         ch4 <= 1'b0;
     end
-    else if (tsck_clk_cnt < tsck_clk_all)
+    else if (DATA_SHIFT_CLK)
     begin
         ch1 <= (ch1 << 1'b1) + SDO1;
         ch2 <= (ch2 << 1'b1) + SDO2;
